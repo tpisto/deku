@@ -150,7 +150,7 @@ impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
     /// * **inner_ctx** - The context required by `T`.
     /// # Examples
     /// ```rust
-    /// # use deku::{ctx::Endian, DekuWrite};
+    /// # use deku::{ctx::Endian, DekuWrite, DekuWriter};
     /// # use deku::bitvec::{Msb0, bitvec};
     /// let data = vec![1u8];
     /// let mut out_buf = vec![];

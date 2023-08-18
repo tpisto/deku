@@ -422,12 +422,12 @@ pub trait DekuWriter<Ctx = ()> {
 
 /// "Writer" trait: implemented on DekuWrite struct and enum containers. A `container` is a type which
 /// doesn't need any context information.
-pub trait DekuContainerWrite: DekuWrite<()> {
+pub trait DekuContainerWrite: DekuWriter<()> {
     /// Write struct/enum to Vec<u8>
     fn to_bytes(&self) -> Result<Vec<u8>, DekuError>;
 
-    /// Write struct/enum to BitVec
-    fn to_bits(&self) -> Result<bitvec::BitVec<u8, bitvec::Msb0>, DekuError>;
+    ///// Write struct/enum to BitVec
+    //fn to_bits(&self) -> Result<bitvec::BitVec<u8, bitvec::Msb0>, DekuError>;
 }
 
 /// "Updater" trait: apply mutations to a type

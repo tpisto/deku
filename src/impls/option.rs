@@ -30,6 +30,13 @@ impl<T: DekuWrite<Ctx>, Ctx: Copy> DekuWrite<Ctx> for Option<T> {
     }
 }
 
+impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Option<T> {
+    fn to_writer<W: Write>(&self, writer: &mut Writer<W>, inner_ctx: Ctx) -> Result<(), DekuError> {
+        self.as_ref()
+            .map_or(Ok(()), |v| v.to_writer(writer, inner_ctx))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
