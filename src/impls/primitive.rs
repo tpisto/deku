@@ -469,20 +469,17 @@ macro_rules! ImplDekuWrite {
                     let mut remaining_bits = bit_size;
                     for chunk in input_bits.chunks(8) {
                         if chunk.len() > remaining_bits {
-                            writer.write_bits(
-                                &mut chunk[chunk.len() - remaining_bits..].to_bitvec(),
-                            )?;
+                            writer.write_bits(&chunk[chunk.len() - remaining_bits..])?;
                             break;
                         } else {
-                            writer.write_bits(&mut chunk.to_bitvec())?;
+                            writer.write_bits(&chunk)?;
                         }
                         remaining_bits -= chunk.len();
                     }
                 } else {
                     // Example read 10 bits u32 [0xAB, 0b11_000000]
                     // => [00000000, 00000000, 00000010, 10101111]
-                    writer
-                        .write_bits(&mut input_bits[input_bits.len() - bit_size..].to_bitvec())?;
+                    writer.write_bits(&input_bits[input_bits.len() - bit_size..])?;
                 }
                 Ok(())
             }
