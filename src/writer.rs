@@ -46,7 +46,7 @@ impl<W: Write> Writer<W> {
     }
 
     #[inline]
-    pub fn write_bytes(&mut self, buf: &mut [u8]) {
+    pub fn write_bytes(&mut self, buf: &[u8]) {
         #[cfg(feature = "logging")]
         log::trace!("writing {} bytes", buf.len());
         if !self.leftover.is_empty() {
