@@ -309,6 +309,7 @@ pub mod no_std_io {
     pub use no_std_io::io::Cursor;
     pub use no_std_io::io::Read;
     pub use no_std_io::io::Result;
+    pub use no_std_io::io::Write;
 }
 
 /// re-export of bitvec
@@ -325,8 +326,10 @@ pub mod error;
 mod impls;
 pub mod prelude;
 pub mod reader;
+pub mod writer;
 
 pub use crate::error::DekuError;
+use crate::writer::Writer;
 
 /// "Reader" trait: read bytes and bits from [`no_std_io::Read`]er
 pub trait DekuReader<'a, Ctx = ()> {
@@ -413,6 +416,10 @@ pub trait DekuWrite<Ctx = ()> {
     ) -> Result<(), DekuError>;
 }
 
+pub trait DekuWriter<Ctx = ()> {
+    fn to_writer<W: no_std_io::Write>(&self, writer: &mut Writer<W>, ctx: Ctx) -> Result<(), DekuError>;
+}
+
 /// "Writer" trait: implemented on DekuWrite struct and enum containers. A `container` is a type which
 /// doesn't need any context information.
 pub trait DekuContainerWrite: DekuWrite<()> {
@@ -448,6 +455,17 @@ where
         ctx: Ctx,
     ) -> Result<(), DekuError> {
         <T>::write(self, output, ctx)?;
+        Ok(())
+    }
+}
+
+impl<T, Ctx> DekuWriter<Ctx> for &T
+where
+    T: DekuWriter<Ctx>,
+    Ctx: Copy,
+{
+    fn to_writer<W: no_std_io::Write>(&self, writer: &mut Writer<W>, ctx: Ctx) -> Result<(), DekuError> {
+        <T>::to_writer(self, writer, ctx)?;
         Ok(())
     }
 }

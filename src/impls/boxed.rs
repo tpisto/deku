@@ -1,4 +1,4 @@
-use no_std_io::io::Read;
+use no_std_io::io::{Read, Write};
 
 use alloc::boxed::Box;
 use alloc::vec::Vec;
@@ -6,7 +6,9 @@ use alloc::vec::Vec;
 use bitvec::prelude::*;
 
 use crate::ctx::Limit;
-use crate::{DekuError, DekuReader, DekuWrite};
+use crate::reader::Reader;
+use crate::writer::Writer;
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 
 impl<'a, T, Ctx> DekuReader<'a, Ctx> for Box<T>
 where
@@ -14,7 +16,7 @@ where
     Ctx: Copy,
 {
     fn from_reader_with_ctx<R: Read>(
-        reader: &mut crate::reader::Reader<R>,
+        reader: &mut Reader<R>,
         inner_ctx: Ctx,
     ) -> Result<Self, DekuError> {
         let val = <T>::from_reader_with_ctx(reader, inner_ctx)?;
@@ -40,7 +42,7 @@ where
     Predicate: FnMut(&T) -> bool,
 {
     fn from_reader_with_ctx<R: Read>(
-        reader: &mut crate::reader::Reader<R>,
+        reader: &mut Reader<R>,
         (limit, inner_ctx): (Limit<T, Predicate>, Ctx),
     ) -> Result<Self, DekuError> {
         // use Vec<T>'s implementation and convert to Box<[T]>
@@ -58,6 +60,20 @@ where
     fn write(&self, output: &mut BitVec<u8, Msb0>, ctx: Ctx) -> Result<(), DekuError> {
         for v in self.as_ref() {
             v.write(output, ctx)?;
+        }
+        Ok(())
+    }
+}
+
+impl<T, Ctx> DekuWriter<Ctx> for Box<[T]>
+where
+    T: DekuWriter<Ctx>,
+    Ctx: Copy,
+{
+    /// Write all `T`s to bits
+    fn to_writer<W: Write>(&self, writer: &mut Writer<W>, ctx: Ctx) -> Result<(), DekuError> {
+        for v in self.as_ref() {
+            v.to_writer(writer, ctx)?;
         }
         Ok(())
     }
@@ -88,6 +104,11 @@ mod tests {
         let mut res_write = bitvec![u8, Msb0;];
         res_read.write(&mut res_write, ()).unwrap();
         assert_eq!(input.to_vec(), res_write.into_vec());
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        res_read.to_writer(&mut writer, ()).unwrap();
+        assert_eq!(input.to_vec(), out_buf.to_vec());
     }
 
     // Note: Copied tests from vec.rs impl
@@ -131,6 +152,15 @@ mod tests {
             .write(&mut res_write, (endian, BitSize(bit_size)))
             .unwrap();
         assert_eq!(expected_write, res_write.into_vec());
+
+        assert_eq!(input[..expected_write.len()].to_vec(), expected_write);
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        res_read
+            .to_writer(&mut writer, (endian, BitSize(bit_size)))
+            .unwrap();
+        assert_eq!(expected_write, out_buf.to_vec());
 
         assert_eq!(input[..expected_write.len()].to_vec(), expected_write);
     }

@@ -1,12 +1,14 @@
-use no_std_io::io::Read;
+use no_std_io::io::{Read, Write};
 
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 use bitvec::prelude::*;
 
+use crate::reader::Reader;
+use crate::writer::Writer;
 use crate::{ctx::*, DekuReader};
-use crate::{DekuError, DekuWrite};
+use crate::{DekuError, DekuWrite, DekuWriter};
 
 /// Read `T`s into a vec until a given predicate returns true
 /// * `capacity` - an optional capacity to pre-allocate the vector with
@@ -16,7 +18,7 @@ use crate::{DekuError, DekuWrite};
 /// and a borrow of the latest value to have been read. It should return `true` if reading
 /// should now stop, and `false` otherwise
 fn reader_vec_with_predicate<'a, T, Ctx, Predicate, R: Read>(
-    reader: &mut crate::reader::Reader<R>,
+    reader: &mut Reader<R>,
     capacity: Option<usize>,
     ctx: Ctx,
     mut predicate: Predicate,
@@ -51,7 +53,7 @@ where
     Predicate: FnMut(&T) -> bool,
 {
     fn from_reader_with_ctx<R: Read>(
-        reader: &mut crate::reader::Reader<R>,
+        reader: &mut Reader<R>,
         (limit, inner_ctx): (Limit<T, Predicate>, Ctx),
     ) -> Result<Self, DekuError>
     where
@@ -113,7 +115,7 @@ impl<'a, T: DekuReader<'a>, Predicate: FnMut(&T) -> bool> DekuReader<'a, Limit<T
 {
     /// Read `T`s until the given limit from input for types which don't require context.
     fn from_reader_with_ctx<R: Read>(
-        reader: &mut crate::reader::Reader<R>,
+        reader: &mut Reader<R>,
         limit: Limit<T, Predicate>,
     ) -> Result<Self, DekuError>
     where
@@ -138,6 +140,27 @@ impl<T: DekuWrite<Ctx>, Ctx: Copy> DekuWrite<Ctx> for Vec<T> {
     fn write(&self, output: &mut BitVec<u8, Msb0>, inner_ctx: Ctx) -> Result<(), DekuError> {
         for v in self {
             v.write(output, inner_ctx)?;
+        }
+        Ok(())
+    }
+}
+
+impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
+    /// Write all `T`s in a `Vec` to bits.
+    /// * **inner_ctx** - The context required by `T`.
+    /// # Examples
+    /// ```rust
+    /// # use deku::{ctx::Endian, DekuWrite};
+    /// # use deku::bitvec::{Msb0, bitvec};
+    /// let data = vec![1u8];
+    /// let mut out_buf = vec![];
+    /// let mut writer = Writer::new(&mut out_buf);
+    /// data.to_writer(&mut writer, Endian::Big).unwrap();
+    /// assert_eq!(output, out_buf.to_vec());
+    /// ```
+    fn to_writer<W: Write>(&self, writer: &mut Writer<W>, inner_ctx: Ctx) -> Result<(), DekuError> {
+        for v in self {
+            v.to_writer(writer, inner_ctx)?;
         }
         Ok(())
     }
@@ -205,6 +228,11 @@ mod tests {
         let mut res_write = bitvec![u8, Msb0;];
         input.write(&mut res_write, endian).unwrap();
         assert_eq!(expected, res_write.into_vec());
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        input.to_writer(&mut writer, endian).unwrap();
+        assert_eq!(expected, out_buf.to_vec());
     }
 
     // Note: These tests also exist in boxed.rs
@@ -248,6 +276,15 @@ mod tests {
             .write(&mut res_write, (endian, BitSize(bit_size)))
             .unwrap();
         assert_eq!(expected_write, res_write.into_vec());
+
+        assert_eq!(input_clone[..expected_write.len()].to_vec(), expected_write);
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        res_read
+            .to_writer(&mut writer, (endian, BitSize(bit_size)))
+            .unwrap();
+        assert_eq!(expected_write, out_buf.to_vec());
 
         assert_eq!(input_clone[..expected_write.len()].to_vec(), expected_write);
     }

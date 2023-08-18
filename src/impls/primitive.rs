@@ -5,11 +5,12 @@ use alloc::string::ToString;
 use core::convert::TryInto;
 
 use bitvec::prelude::*;
-use no_std_io::io::Read;
+use no_std_io::io::{Read, Write};
 
 use crate::ctx::*;
 use crate::reader::{Reader, ReaderRet};
-use crate::{DekuError, DekuReader, DekuWrite};
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::writer::Writer;
 
 /// "Read" trait: read bits and construct type
 trait DekuRead<'a, Ctx = ()> {
@@ -438,6 +439,53 @@ macro_rules! ImplDekuWrite {
             }
         }
 
+        impl DekuWriter<(Endian, BitSize)> for $typ {
+            #[inline]
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                (endian, size): (Endian, BitSize),
+            ) -> Result<(), DekuError> {
+                let input = match endian {
+                    Endian::Little => self.to_le_bytes(),
+                    Endian::Big => self.to_be_bytes(),
+                };
+
+                let bit_size: usize = size.0;
+
+                let input_bits = input.view_bits::<Msb0>();
+
+                if bit_size > input_bits.len() {
+                    return Err(DekuError::InvalidParam(format!(
+                        "bit size {} is larger then input {}",
+                        bit_size,
+                        input_bits.len()
+                    )));
+                }
+
+                if matches!(endian, Endian::Little) {
+                    // Example read 10 bits u32 [0xAB, 0b11_000000]
+                    // => [10101011, 00000011, 00000000, 00000000]
+                    let mut remaining_bits = bit_size;
+                    for mut chunk in input_bits.chunks(8) {
+                        if chunk.len() > remaining_bits {
+                            writer
+                                .write_bits(&mut chunk[chunk.len() - remaining_bits..].to_bitvec());
+                            break;
+                        } else {
+                            writer.write_bits(&mut chunk.to_bitvec());
+                        }
+                        remaining_bits -= chunk.len();
+                    }
+                } else {
+                    // Example read 10 bits u32 [0xAB, 0b11_000000]
+                    // => [00000000, 00000000, 00000010, 10101111]
+                    writer.write_bits(&mut input_bits[input_bits.len() - bit_size..].to_bitvec());
+                }
+                Ok(())
+            }
+        }
+
         impl DekuWrite<(Endian, ByteSize)> for $typ {
             #[inline]
             fn write(
@@ -484,6 +532,37 @@ macro_rules! ImplDekuWrite {
             }
         }
 
+        impl DekuWriter<(Endian, ByteSize)> for $typ {
+            #[inline]
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                (endian, size): (Endian, ByteSize),
+            ) -> Result<(), DekuError> {
+                let mut input = match endian {
+                    Endian::Little => self.to_le_bytes(),
+                    Endian::Big => self.to_be_bytes(),
+                };
+
+                const TYPE_SIZE: usize = core::mem::size_of::<$typ>();
+                if size.0 > TYPE_SIZE {
+                    return Err(DekuError::InvalidParam(format!(
+                        "byte size {} is larger then input {}",
+                        size.0, TYPE_SIZE
+                    )));
+                }
+
+                if matches!(endian, Endian::Little) {
+                    for b in &mut input[..size.0 as usize] {
+                        writer.write_bytes(&mut [*b])
+                    }
+                } else {
+                    writer.write_bytes(&mut input[..size.0 as usize]);
+                }
+                Ok(())
+            }
+        }
+
         // Only have `endian`, return all input
         impl DekuWrite<Endian> for $typ {
             #[inline]
@@ -497,6 +576,22 @@ macro_rules! ImplDekuWrite {
                     Endian::Big => self.to_be_bytes(),
                 };
                 output.extend_from_bitslice(input.view_bits::<Msb0>());
+                Ok(())
+            }
+        }
+
+        impl DekuWriter<Endian> for $typ {
+            #[inline]
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                endian: Endian,
+            ) -> Result<(), DekuError> {
+                let mut input = match endian {
+                    Endian::Little => self.to_le_bytes(),
+                    Endian::Big => self.to_be_bytes(),
+                };
+                writer.write_bytes(&mut input);
                 Ok(())
             }
         }
@@ -517,15 +612,37 @@ macro_rules! ForwardDekuWrite {
             }
         }
 
-        // Only have `bit_size`, set `endian` to `Endian::default`.
+        impl DekuWriter<BitSize> for $typ {
+            #[inline]
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                bit_size: BitSize,
+            ) -> Result<(), DekuError> {
+                <$typ>::to_writer(self, writer, (Endian::default(), bit_size))
+            }
+        }
+
+        // Only have `byte_size`, set `endian` to `Endian::default`.
         impl DekuWrite<ByteSize> for $typ {
             #[inline]
             fn write(
                 &self,
                 output: &mut BitVec<u8, Msb0>,
-                bit_size: ByteSize,
+                byte_size: ByteSize,
             ) -> Result<(), DekuError> {
-                <$typ>::write(self, output, (Endian::default(), bit_size))
+                <$typ>::write(self, output, (Endian::default(), byte_size))
+            }
+        }
+
+        impl DekuWriter<ByteSize> for $typ {
+            #[inline]
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                byte_size: ByteSize,
+            ) -> Result<(), DekuError> {
+                <$typ>::to_writer(self, writer, (Endian::default(), byte_size))
             }
         }
 
@@ -533,6 +650,13 @@ macro_rules! ForwardDekuWrite {
             #[inline]
             fn write(&self, output: &mut BitVec<u8, Msb0>, _: ()) -> Result<(), DekuError> {
                 <$typ>::write(self, output, Endian::default())
+            }
+        }
+
+        impl DekuWriter for $typ {
+            #[inline]
+            fn to_writer<W: Write>(&self, writer: &mut Writer<W>, _: ()) -> Result<(), DekuError> {
+                <$typ>::to_writer(self, writer, Endian::default())
             }
         }
     };
@@ -810,8 +934,55 @@ mod tests {
         assert_eq!(expected, res_write.into_vec());
     }
 
-    #[rstest(input, endian, bit_size, expected, expected_write,
-        case::normal([0xDD, 0xCC, 0xBB, 0xAA].as_ref(), Endian::Little, Some(32), 0xAABB_CCDD, vec![0xDD, 0xCC, 0xBB, 0xAA]),
+    #[rstest(input, endian, bit_size, expected, expected_leftover,
+        case::normal_le(0xDDCC_BBAA, Endian::Little, None, vec![0xAA, 0xBB, 0xCC, 0xDD], BitVec::EMPTY),
+        case::normal_be(0xDDCC_BBAA, Endian::Big, None, vec![0xDD, 0xCC, 0xBB, 0xAA], BitVec::EMPTY),
+        case::bit_size_le_smaller(0x03AB, Endian::Little, Some(10), vec![0xAB], bitvec![u8, Msb0; 1, 1]),
+        case::bit_size_be_smaller(0x03AB, Endian::Big, Some(10), vec![0b11_1010_10], bitvec![u8, Msb0; 1, 1]),
+        #[should_panic(expected = "InvalidParam(\"bit size 100 is larger then input 32\")")]
+        case::bit_size_le_bigger(0x03AB, Endian::Little, Some(100), vec![0xAB, 0b11_000000], bitvec![u8, Msb0; 1, 1]),
+    )]
+    fn test_bit_writer(
+        input: u32,
+        endian: Endian,
+        bit_size: Option<usize>,
+        expected: Vec<u8>,
+        expected_leftover: BitVec<u8, Msb0>,
+    ) {
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        match bit_size {
+            Some(bit_size) => input
+                .to_writer(&mut writer, (endian, BitSize(bit_size)))
+                .unwrap(),
+            None => input.to_writer(&mut writer, endian).unwrap(),
+        };
+        assert_eq!(expected_leftover, writer.leftover);
+        assert_eq!(expected, out_buf);
+    }
+
+    #[rstest(input, endian, byte_size, expected,
+        case::normal_le(0xDDCC_BBAA, Endian::Little, None, vec![0xAA, 0xBB, 0xCC, 0xDD]),
+        case::normal_be(0xDDCC_BBAA, Endian::Big, None, vec![0xDD, 0xCC, 0xBB, 0xAA]),
+        case::bit_size_le_smaller(0x00ffABAA, Endian::Little, Some(2), vec![0xaa, 0xab]),
+        case::bit_size_be_smaller(0x00ffABAA, Endian::Big, Some(2), vec![0x00, 0xff]),
+        #[should_panic(expected = "InvalidParam(\"byte size 10 is larger then input 4\")")]
+        case::bit_size_le_bigger(0x03AB, Endian::Little, Some(10), vec![0xAB, 0b11_000000]),
+    )]
+    fn test_byte_writer(input: u32, endian: Endian, byte_size: Option<usize>, expected: Vec<u8>) {
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        match byte_size {
+            Some(byte_size) => input
+                .to_writer(&mut writer, (endian, ByteSize(byte_size)))
+                .unwrap(),
+            None => input.to_writer(&mut writer, endian).unwrap(),
+        };
+        assert_hex::assert_eq_hex!(expected, out_buf);
+    }
+
+    #[rstest(input, endian, bit_size, expected, expected_rest, expected_write,
+        case::normal([0xDD, 0xCC, 0xBB, 0xAA].as_ref(), Endian::Little, Some(32), 0xAABB_CCDD, bits![u8, Msb0;], vec![0xDD, 0xCC, 0xBB, 0xAA]),
     )]
     fn test_bit_read_write(
         input: &[u8],

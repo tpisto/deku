@@ -1,4 +1,4 @@
-use no_std_io::io::Read;
+use no_std_io::io::{Read, Write};
 use std::ffi::CString;
 
 use bitvec::prelude::*;
@@ -6,15 +6,15 @@ use bitvec::prelude::*;
 use crate::{ctx::*, DekuReader};
 use crate::{DekuError, DekuWrite};
 
-impl<Ctx: Copy> DekuWrite<Ctx> for CString
-where
-    u8: DekuWrite<Ctx>,
-{
-    fn write(&self, output: &mut BitVec<u8, Msb0>, ctx: Ctx) -> Result<(), DekuError> {
-        let bytes = self.as_bytes_with_nul();
-        bytes.write(output, ctx)
-    }
-}
+//impl<Ctx: Copy> DekuWrite<Ctx> for CString
+//where
+//    u8: DekuWrite<Ctx>,
+//{
+//    fn write(&self, output: &mut BitVec<u8, Msb0>, ctx: Ctx) -> Result<(), DekuError> {
+//        let bytes = self.as_bytes_with_nul();
+//        bytes.write(output, ctx)
+//    }
+//}
 
 impl<'a, Ctx: Copy> DekuReader<'a, Ctx> for CString
 where
@@ -70,5 +70,10 @@ mod tests {
         let mut res_write = bitvec![u8, Msb0;];
         res_read.write(&mut res_write, ()).unwrap();
         assert_eq!(vec![b't', b'e', b's', b't', b'\0'], res_write.into_vec());
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        res_read.to_writer(&mut writer, ()).unwrap();
+        assert_eq!(vec![b't', b'e', b's', b't', b'\0'], out_buf.to_vec());
     }
 }

@@ -1,18 +1,20 @@
 #[cfg(feature = "alloc")]
 use alloc::format;
 use core::num::*;
-use no_std_io::io::Read;
+use no_std_io::io::{Read, Write};
 
 use bitvec::prelude::*;
 
 use crate::ctx::*;
-use crate::{DekuError, DekuReader, DekuWrite};
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::reader::Reader;
+use crate::writer::Writer;
 
 macro_rules! ImplDekuTraitsCtx {
     ($typ:ty, $readtype:ty, $ctx_arg:tt, $ctx_type:tt) => {
         impl DekuReader<'_, $ctx_type> for $typ {
             fn from_reader_with_ctx<R: Read>(
-                reader: &mut crate::reader::Reader<R>,
+                reader: &mut Reader<R>,
                 $ctx_arg: $ctx_type,
             ) -> Result<Self, DekuError> {
                 let value = <$readtype>::from_reader_with_ctx(reader, $ctx_arg)?;
@@ -33,6 +35,17 @@ macro_rules! ImplDekuTraitsCtx {
             ) -> Result<(), DekuError> {
                 let value = self.get();
                 value.write(output, $ctx_arg)
+            }
+        }
+
+        impl DekuWriter<$ctx_type> for $typ {
+            fn to_writer<W: Write>(
+                &self,
+                writer: &mut Writer<W>,
+                $ctx_arg: $ctx_type,
+            ) -> Result<(), DekuError> {
+                let value = self.get();
+                value.to_writer(writer, $ctx_arg)
             }
         }
     };
@@ -85,5 +98,10 @@ mod tests {
         let mut res_write = bitvec![u8, Msb0;];
         res_read.write(&mut res_write, ()).unwrap();
         assert_eq!(input.to_vec(), res_write.into_vec());
+
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        res_read.to_writer(&mut writer, ()).unwrap();
+        assert_eq!(input.to_vec(), out_buf.to_vec());
     }
 }
