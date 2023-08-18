@@ -466,7 +466,7 @@ fn emit_padding(bit_size: &TokenStream) -> TokenStream {
                     stringify!(#bit_size)
                 ))
             )?;
-            __deku_writer.write_bits(::#crate_::bitvec::bitvec![u8, ::#crate_::bitvec::Msb0; 0; __deku_pad].as_bitslice());
+            __deku_writer.write_bits(::#crate_::bitvec::bitvec![u8, ::#crate_::bitvec::Msb0; 0; __deku_pad].as_bitslice())?;
         }
     }
 }

@@ -23,7 +23,8 @@ impl<W: Write> Writer<W> {
         }
     }
 
-    pub fn write_bits(&mut self, bits: &BitSlice<u8, Msb0>) {
+    #[inline]
+    pub fn write_bits(&mut self, bits: &BitSlice<u8, Msb0>) -> Result<(), DekuError> {
         #[cfg(feature = "logging")]
         log::trace!("writing {} bits", bits.len());
         let mut bits = if self.leftover.is_empty() {
@@ -37,16 +38,22 @@ impl<W: Write> Writer<W> {
 
         // TODO: with_capacity?
         let mut buf = vec![];
-        bits.read_to_end(&mut buf).unwrap();
+        if let Err(_) = bits.read_to_end(&mut buf) {
+            return Err(DekuError::WriteError);
+        }
         self.bits_written = buf.len() * 8;
         self.leftover = bits.to_bitvec();
-        self.inner.write_all(&buf).unwrap();
+        if let Err(_) = self.inner.write_all(&buf) {
+            return Err(DekuError::WriteError);
+        }
         #[cfg(feature = "logging")]
         log::trace!("wrote {} bits", buf.len() * 8);
+
+        Ok(())
     }
 
     #[inline]
-    pub fn write_bytes(&mut self, buf: &[u8]) {
+    pub fn write_bytes(&mut self, buf: &[u8]) -> Result<(), DekuError> {
         #[cfg(feature = "logging")]
         log::trace!("writing {} bytes", buf.len());
         if !self.leftover.is_empty() {
@@ -54,26 +61,35 @@ impl<W: Write> Writer<W> {
             log::trace!("leftover exists");
             // TODO: we could check here and only send the required bits to finish the byte?
             // (instead of sending the entire thing)
-            self.write_bits(&mut BitVec::from_slice(buf));
+            self.write_bits(&mut BitVec::from_slice(buf))?;
         } else {
-            self.inner.write_all(buf).unwrap();
+            if let Err(_) = self.inner.write_all(buf) {
+                return Err(DekuError::WriteError);
+            }
             self.bits_written = buf.len() * 8;
         }
+
+        Ok(())
     }
 
     #[inline]
-    pub fn finalize(&mut self) {
+    pub fn finalize(&mut self) -> Result<(), DekuError> {
         if !self.leftover.is_empty() {
             #[cfg(feature = "logging")]
             log::trace!("finalized: {} bits leftover", self.leftover.len());
             self.leftover
                 .extend_from_bitslice(&bitvec![u8, Msb0; 0; 8 - self.leftover.len()]);
             let mut buf = vec![];
-            self.leftover.read_to_end(&mut buf).unwrap();
-            self.inner.write_all(&buf).unwrap();
+            if let Err(_) = self.leftover.read_to_end(&mut buf) {
+                return Err(DekuError::WriteError);
+            }
+            if let Err(_) = self.inner.write_all(&buf) {
+                return Err(DekuError::WriteError);
+            }
             #[cfg(feature = "logging")]
             log::trace!("finalized: wrote {} bits", buf.len() * 8);
         }
+        Ok(())
     }
 }
 

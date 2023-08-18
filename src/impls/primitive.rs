@@ -467,20 +467,22 @@ macro_rules! ImplDekuWrite {
                     // Example read 10 bits u32 [0xAB, 0b11_000000]
                     // => [10101011, 00000011, 00000000, 00000000]
                     let mut remaining_bits = bit_size;
-                    for mut chunk in input_bits.chunks(8) {
+                    for chunk in input_bits.chunks(8) {
                         if chunk.len() > remaining_bits {
-                            writer
-                                .write_bits(&mut chunk[chunk.len() - remaining_bits..].to_bitvec());
+                            writer.write_bits(
+                                &mut chunk[chunk.len() - remaining_bits..].to_bitvec(),
+                            )?;
                             break;
                         } else {
-                            writer.write_bits(&mut chunk.to_bitvec());
+                            writer.write_bits(&mut chunk.to_bitvec())?;
                         }
                         remaining_bits -= chunk.len();
                     }
                 } else {
                     // Example read 10 bits u32 [0xAB, 0b11_000000]
                     // => [00000000, 00000000, 00000010, 10101111]
-                    writer.write_bits(&mut input_bits[input_bits.len() - bit_size..].to_bitvec());
+                    writer
+                        .write_bits(&mut input_bits[input_bits.len() - bit_size..].to_bitvec())?;
                 }
                 Ok(())
             }
@@ -554,10 +556,10 @@ macro_rules! ImplDekuWrite {
 
                 if matches!(endian, Endian::Little) {
                     for b in &mut input[..size.0 as usize] {
-                        writer.write_bytes(&mut [*b])
+                        writer.write_bytes(&mut [*b])?;
                     }
                 } else {
-                    writer.write_bytes(&mut input[..size.0 as usize]);
+                    writer.write_bytes(&mut input[..size.0 as usize])?;
                 }
                 Ok(())
             }
@@ -591,7 +593,7 @@ macro_rules! ImplDekuWrite {
                     Endian::Little => self.to_le_bytes(),
                     Endian::Big => self.to_be_bytes(),
                 };
-                writer.write_bytes(&mut input);
+                writer.write_bytes(&mut input)?;
                 Ok(())
             }
         }
