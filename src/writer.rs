@@ -66,7 +66,8 @@ impl<W: Write> Writer<W> {
         if !self.leftover.is_empty() {
             #[cfg(feature = "logging")]
             log::trace!("finalized: {} bits leftover", self.leftover.len());
-            self.leftover.extend_from_bitslice(&bitvec![u8, Msb0; 0; 8 - self.leftover.len()]);
+            self.leftover
+                .extend_from_bitslice(&bitvec![u8, Msb0; 0; 8 - self.leftover.len()]);
             let mut buf = vec![];
             self.leftover.read_to_end(&mut buf).unwrap();
             self.inner.write_all(&buf).unwrap();
