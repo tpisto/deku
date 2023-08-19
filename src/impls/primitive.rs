@@ -553,10 +553,10 @@ macro_rules! ImplDekuWrite {
 
                 if matches!(endian, Endian::Little) {
                     for b in &mut input[..size.0 as usize] {
-                        writer.write_bytes(&mut [*b])?;
+                        writer.write_bytes(&[*b])?;
                     }
                 } else {
-                    writer.write_bytes(&mut input[..size.0 as usize])?;
+                    writer.write_bytes(&input[..size.0 as usize])?;
                 }
                 Ok(())
             }
@@ -564,7 +564,7 @@ macro_rules! ImplDekuWrite {
 
         // Only have `endian`, return all input
         impl DekuWrite<Endian> for $typ {
-            #[inline]
+            #[inline(always)]
             fn write(
                 &self,
                 output: &mut BitVec<u8, Msb0>,
@@ -580,17 +580,17 @@ macro_rules! ImplDekuWrite {
         }
 
         impl DekuWriter<Endian> for $typ {
-            #[inline]
+            #[inline(always)]
             fn to_writer<W: Write>(
                 &self,
                 writer: &mut Writer<W>,
                 endian: Endian,
             ) -> Result<(), DekuError> {
-                let mut input = match endian {
+                let input = match endian {
                     Endian::Little => self.to_le_bytes(),
                     Endian::Big => self.to_be_bytes(),
                 };
-                writer.write_bytes(&mut input)?;
+                writer.write_bytes(&input)?;
                 Ok(())
             }
         }
