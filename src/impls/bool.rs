@@ -5,9 +5,9 @@ use alloc::format;
 
 use bitvec::prelude::*;
 
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 use crate::reader::Reader;
 use crate::writer::Writer;
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 
 impl<'a, Ctx> DekuReader<'a, Ctx> for bool
 where
@@ -62,7 +62,7 @@ mod tests {
     use no_std_io::io::Cursor;
     use rstest::rstest;
 
-    use crate::reader::Reader;
+    use crate::{ctx::BitSize, reader::Reader};
 
     use super::*;
 

@@ -1,5 +1,5 @@
-use acid_io::{Read, Write};
 use bitvec::prelude::*;
+use no_std_io::io::{Read, Write};
 
 #[cfg(feature = "logging")]
 use log;

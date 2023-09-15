@@ -125,26 +125,6 @@ impl<'a, T: DekuReader<'a>, Predicate: FnMut(&T) -> bool> DekuReader<'a, Limit<T
     }
 }
 
-impl<T: DekuWrite<Ctx>, Ctx: Copy> DekuWrite<Ctx> for Vec<T> {
-    /// Write all `T`s in a `Vec` to bits.
-    /// * **inner_ctx** - The context required by `T`.
-    /// # Examples
-    /// ```rust
-    /// # use deku::{ctx::Endian, DekuWrite};
-    /// # use deku::bitvec::{Msb0, bitvec};
-    /// let data = vec![1u8];
-    /// let mut output = bitvec![u8, Msb0;];
-    /// data.write(&mut output, Endian::Big).unwrap();
-    /// assert_eq!(output, bitvec![u8, Msb0; 0, 0, 0, 0, 0, 0, 0, 1])
-    /// ```
-    fn write(&self, output: &mut BitVec<u8, Msb0>, inner_ctx: Ctx) -> Result<(), DekuError> {
-        for v in self {
-            v.write(output, inner_ctx)?;
-        }
-        Ok(())
-    }
-}
-
 impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
     /// Write all `T`s in a `Vec` to bits.
     /// * **inner_ctx** - The context required by `T`.
@@ -156,7 +136,7 @@ impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
     /// let mut out_buf = vec![];
     /// let mut writer = Writer::new(&mut out_buf);
     /// data.to_writer(&mut writer, Endian::Big).unwrap();
-    /// assert_eq!(output, out_buf.to_vec());
+    /// assert_eq!(data, out_buf.to_vec());
     /// ```
     fn to_writer<W: Write>(&self, writer: &mut Writer<W>, inner_ctx: Ctx) -> Result<(), DekuError> {
         for v in self {
@@ -225,10 +205,6 @@ mod tests {
         case::normal(vec![0xAABB, 0xCCDD], Endian::Little, vec![0xBB, 0xAA, 0xDD, 0xCC]),
     )]
     fn test_vec_write(input: Vec<u16>, endian: Endian, expected: Vec<u8>) {
-        let mut res_write = bitvec![u8, Msb0;];
-        input.write(&mut res_write, endian).unwrap();
-        assert_eq!(expected, res_write.into_vec());
-
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);
         input.to_writer(&mut writer, endian).unwrap();
@@ -270,14 +246,6 @@ mod tests {
         let mut buf = vec![];
         input.read_to_end(&mut buf).unwrap();
         assert_eq!(expected_rest_bytes, buf);
-
-        let mut res_write = bitvec![u8, Msb0;];
-        res_read
-            .write(&mut res_write, (endian, BitSize(bit_size)))
-            .unwrap();
-        assert_eq!(expected_write, res_write.into_vec());
-
-        assert_eq!(input_clone[..expected_write.len()].to_vec(), expected_write);
 
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);

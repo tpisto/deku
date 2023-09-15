@@ -417,7 +417,11 @@ pub trait DekuWrite<Ctx = ()> {
 }
 
 pub trait DekuWriter<Ctx = ()> {
-    fn to_writer<W: no_std_io::Write>(&self, writer: &mut Writer<W>, ctx: Ctx) -> Result<(), DekuError>;
+    fn to_writer<W: no_std_io::Write>(
+        &self,
+        writer: &mut Writer<W>,
+        ctx: Ctx,
+    ) -> Result<(), DekuError>;
 }
 
 /// "Writer" trait: implemented on DekuWrite struct and enum containers. A `container` is a type which
@@ -464,7 +468,11 @@ where
     T: DekuWriter<Ctx>,
     Ctx: Copy,
 {
-    fn to_writer<W: no_std_io::Write>(&self, writer: &mut Writer<W>, ctx: Ctx) -> Result<(), DekuError> {
+    fn to_writer<W: no_std_io::Write>(
+        &self,
+        writer: &mut Writer<W>,
+        ctx: Ctx,
+    ) -> Result<(), DekuError> {
         <T>::to_writer(self, writer, ctx)?;
         Ok(())
     }

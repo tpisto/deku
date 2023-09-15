@@ -9,8 +9,8 @@ use no_std_io::io::{Read, Write};
 
 use crate::ctx::*;
 use crate::reader::{Reader, ReaderRet};
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 use crate::writer::Writer;
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 
 /// "Read" trait: read bits and construct type
 trait DekuRead<'a, Ctx = ()> {
@@ -980,8 +980,8 @@ mod tests {
         assert_hex::assert_eq_hex!(expected, out_buf);
     }
 
-    #[rstest(input, endian, bit_size, expected, expected_rest, expected_write,
-        case::normal([0xDD, 0xCC, 0xBB, 0xAA].as_ref(), Endian::Little, Some(32), 0xAABB_CCDD, bits![u8, Msb0;], vec![0xDD, 0xCC, 0xBB, 0xAA]),
+    #[rstest(input, endian, bit_size, expected, expected_write,
+        case::normal([0xDD, 0xCC, 0xBB, 0xAA].as_ref(), Endian::Little, Some(32), 0xAABB_CCDD, vec![0xDD, 0xCC, 0xBB, 0xAA]),
     )]
     fn test_bit_read_write(
         input: &[u8],

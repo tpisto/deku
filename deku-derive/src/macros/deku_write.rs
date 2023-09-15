@@ -128,7 +128,7 @@ fn emit_struct(input: &DekuData) -> Result<TokenStream, syn::Error> {
 
         impl #imp ::#crate_::DekuWriter<#ctx_types> for #ident #wher {
             #[allow(unused_variables)]
-            fn to_writer<W: ::#crate_::acid_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, #ctx_arg) -> core::result::Result<(), ::#crate_::DekuError> {
+            fn to_writer<W: ::#crate_::no_std_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, #ctx_arg) -> core::result::Result<(), ::#crate_::DekuError> {
                 #write_body
             }
         }
@@ -140,7 +140,7 @@ fn emit_struct(input: &DekuData) -> Result<TokenStream, syn::Error> {
         tokens.extend(quote! {
             impl #imp ::#crate_::DekuWriter for #ident #wher {
                 #[allow(unused_variables)]
-                fn to_writer<W: ::#crate_::acid_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, _: ()) -> core::result::Result<(), ::#crate_::DekuError> {
+                fn to_writer<W: ::#crate_::no_std_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, _: ()) -> core::result::Result<(), ::#crate_::DekuError> {
                     #write_body
                 }
             }
@@ -345,7 +345,7 @@ fn emit_enum(input: &DekuData) -> Result<TokenStream, syn::Error> {
 
         impl #imp ::#crate_::DekuWriter<#ctx_types> for #ident #wher {
             #[allow(unused_variables)]
-            fn to_writer<W: ::#crate_::acid_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, #ctx_arg) -> core::result::Result<(), ::#crate_::DekuError> {
+            fn to_writer<W: ::#crate_::no_std_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, #ctx_arg) -> core::result::Result<(), ::#crate_::DekuError> {
                 #write_body
             }
         }
@@ -357,7 +357,7 @@ fn emit_enum(input: &DekuData) -> Result<TokenStream, syn::Error> {
         tokens.extend(quote! {
             impl #imp ::#crate_::DekuWriter for #ident #wher {
                 #[allow(unused_variables)]
-                fn to_writer<W: ::#crate_::acid_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, _: ()) -> core::result::Result<(), ::#crate_::DekuError> {
+                fn to_writer<W: ::#crate_::no_std_io::Write>(&self, __deku_writer: &mut ::#crate_::writer::Writer<W>, _: ()) -> core::result::Result<(), ::#crate_::DekuError> {
                     #write_body
                 }
             }

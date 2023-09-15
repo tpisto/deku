@@ -6,9 +6,9 @@ use no_std_io::io::{Read, Write};
 use bitvec::prelude::*;
 
 use crate::ctx::*;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 use crate::reader::Reader;
 use crate::writer::Writer;
+use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
 
 macro_rules! ImplDekuTraitsCtx {
     ($typ:ty, $readtype:ty, $ctx_arg:tt, $ctx_type:tt) => {

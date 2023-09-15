@@ -1,10 +1,10 @@
 use std::convert::TryInto;
 
-use acid_io::Write;
 use deku::bitvec::{BitVec, Msb0};
 use deku::ctx::BitSize;
 use deku::writer::Writer;
 use deku::{prelude::*, DekuWriter};
+use no_std_io::io::Write;
 
 fn bit_flipper_read<R: std::io::Read>(
     field_a: u8,
@@ -52,7 +52,7 @@ struct DekuTest {
     field_a: u8,
 
     #[deku(
-        writer = "bit_flipper_write(*field_a, *field_b, deku::output, BitSize(8))"
+        reader = "bit_flipper_read(*field_a, deku::reader, BitSize(8))",
         writer = "bit_flipper_write(*field_a, *field_b, deku::writer, BitSize(8))"
     )]
     field_b: u8,

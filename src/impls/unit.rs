@@ -1,7 +1,9 @@
 use bitvec::prelude::*;
 use no_std_io::io::{Read, Write};
 
-use crate::{writer::Writer, DekuError, DekuRead, DekuReader, DekuWrite, DekuWriter, reader::Reader};
+use crate::{
+    reader::Reader, writer::Writer, DekuError, DekuRead, DekuReader, DekuWrite, DekuWriter,
+};
 
 impl<Ctx: Copy> DekuReader<'_, Ctx> for () {
     fn from_reader_with_ctx<R: Read>(
