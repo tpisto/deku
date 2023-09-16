@@ -3,12 +3,10 @@ use no_std_io::io::{Read, Write};
 #[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
-use bitvec::prelude::*;
-
 use crate::reader::Reader;
 use crate::writer::Writer;
 use crate::{ctx::*, DekuReader};
-use crate::{DekuError, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuWriter};
 
 /// Read `T`s into a vec until a given predicate returns true
 /// * `capacity` - an optional capacity to pre-allocate the vector with
@@ -130,7 +128,8 @@ impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
     /// * **inner_ctx** - The context required by `T`.
     /// # Examples
     /// ```rust
-    /// # use deku::{ctx::Endian, DekuWrite, DekuWriter};
+    /// # use deku::{ctx::Endian, DekuWriter};
+    /// # use deku::writer::Writer;
     /// # use deku::bitvec::{Msb0, bitvec};
     /// let data = vec![1u8];
     /// let mut out_buf = vec![];
@@ -148,6 +147,7 @@ impl<T: DekuWriter<Ctx>, Ctx: Copy> DekuWriter<Ctx> for Vec<T> {
 
 #[cfg(test)]
 mod tests {
+    use crate::bitvec::{bits, BitSlice, Msb0};
     use rstest::rstest;
 
     use crate::reader::Reader;

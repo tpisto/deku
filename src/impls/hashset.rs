@@ -2,13 +2,10 @@ use std::collections::HashSet;
 use std::hash::{BuildHasher, Hash};
 
 use crate::writer::Writer;
-use bitvec::prelude::*;
 use no_std_io::io::{Read, Write};
 
 use crate::ctx::*;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
-
-// TODO: Add DekuWriter
+use crate::{DekuError, DekuReader, DekuWriter};
 
 /// Read `T`s into a hashset until a given predicate returns true
 /// * `capacity` - an optional capacity to pre-allocate the hashset with
@@ -161,13 +158,15 @@ impl<T: DekuWriter<Ctx>, S, Ctx: Copy> DekuWriter<Ctx> for HashSet<T, S> {
     /// instead of the default RandomState hasher if you don't want the order written to change.
     /// # Examples
     /// ```rust
-    /// # use deku::{ctx::Endian, DekuWrite};
+    /// # use deku::{ctx::Endian, DekuWriter};
+    /// # use deku::writer::Writer;
     /// # use deku::bitvec::{Msb0, bitvec};
     /// # use std::collections::HashSet;
+    /// let mut out_buf = vec![];
+    /// let mut writer = Writer::new(&mut out_buf);
     /// let set: HashSet<u8> = vec![1].into_iter().collect();
-    /// let mut output = bitvec![u8, Msb0;];
-    /// set.write(&mut output, Endian::Big).unwrap();
-    /// assert_eq!(output, bitvec![u8, Msb0; 0, 0, 0, 0, 0, 0, 0, 1])
+    /// set.to_writer(&mut writer, Endian::Big).unwrap();
+    /// assert_eq!(out_buf, vec![1]);
     /// ```
     fn to_writer<W: Write>(&self, writer: &mut Writer<W>, inner_ctx: Ctx) -> Result<(), DekuError> {
         for v in self {
@@ -179,6 +178,7 @@ impl<T: DekuWriter<Ctx>, S, Ctx: Copy> DekuWriter<Ctx> for HashSet<T, S> {
 
 #[cfg(test)]
 mod tests {
+    use crate::bitvec::{bits, BitSlice, Msb0};
     use no_std_io::io::Cursor;
     use rstest::rstest;
     use rustc_hash::FxHashSet;

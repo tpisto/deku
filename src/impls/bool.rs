@@ -7,7 +7,7 @@ use bitvec::prelude::*;
 
 use crate::reader::Reader;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 impl<'a, Ctx> DekuReader<'a, Ctx> for bool
 where
@@ -27,19 +27,6 @@ where
         }?;
 
         Ok(ret)
-    }
-}
-
-impl<Ctx> DekuWrite<Ctx> for bool
-where
-    u8: DekuWrite<Ctx>,
-{
-    /// wrapper around u8::write with consideration to context, such as bit size
-    fn write(&self, output: &mut BitVec<u8, Msb0>, inner_ctx: Ctx) -> Result<(), DekuError> {
-        match self {
-            true => (0x01u8).write(output, inner_ctx),
-            false => (0x00u8).write(output, inner_ctx),
-        }
     }
 }
 
@@ -87,10 +74,6 @@ mod tests {
         let mut reader = Reader::new(&mut cursor);
         let res_read = bool::from_reader_with_ctx(&mut reader, crate::ctx::BitSize(2)).unwrap();
         assert!(res_read);
-
-        let mut res_write = bitvec![u8, Msb0;];
-        res_read.write(&mut res_write, ()).unwrap();
-        assert_eq!(vec![0b01], res_write.into_vec());
     }
 
     #[test]

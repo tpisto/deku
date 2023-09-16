@@ -2,11 +2,9 @@ use std::borrow::{Borrow, Cow};
 
 use no_std_io::io::{Read, Write};
 
-use bitvec::prelude::*;
-
 use crate::reader::Reader;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 impl<'a, T, Ctx> DekuReader<'a, Ctx> for Cow<'a, T>
 where
@@ -19,17 +17,6 @@ where
     ) -> Result<Self, DekuError> {
         let val = <T>::from_reader_with_ctx(reader, inner_ctx)?;
         Ok(Cow::Owned(val))
-    }
-}
-
-impl<T, Ctx> DekuWrite<Ctx> for Cow<'_, T>
-where
-    T: DekuWrite<Ctx> + Clone,
-    Ctx: Copy,
-{
-    /// Write T from Cow<T>
-    fn write(&self, output: &mut BitVec<u8, Msb0>, inner_ctx: Ctx) -> Result<(), DekuError> {
-        (self.borrow() as &T).write(output, inner_ctx)
     }
 }
 
@@ -63,10 +50,6 @@ mod tests {
         let mut reader = Reader::new(&mut cursor);
         let res_read = <Cow<u16>>::from_reader_with_ctx(&mut reader, ()).unwrap();
         assert_eq!(expected, res_read);
-
-        let mut res_write = bitvec![u8, Msb0;];
-        res_read.write(&mut res_write, ()).unwrap();
-        assert_eq!(input.to_vec(), res_write.into_vec());
 
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);

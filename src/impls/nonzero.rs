@@ -8,7 +8,7 @@ use bitvec::prelude::*;
 use crate::ctx::*;
 use crate::reader::Reader;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 macro_rules! ImplDekuTraitsCtx {
     ($typ:ty, $readtype:ty, $ctx_arg:tt, $ctx_type:tt) => {
@@ -24,17 +24,6 @@ macro_rules! ImplDekuTraitsCtx {
                     None => Err(DekuError::Parse(format!("NonZero assertion"))),
                     Some(v) => Ok(v),
                 }
-            }
-        }
-
-        impl DekuWrite<$ctx_type> for $typ {
-            fn write(
-                &self,
-                output: &mut BitVec<u8, Msb0>,
-                $ctx_arg: $ctx_type,
-            ) -> Result<(), DekuError> {
-                let value = self.get();
-                value.write(output, $ctx_arg)
             }
         }
 
@@ -94,10 +83,6 @@ mod tests {
         let mut reader = Reader::new(&mut bit_slice);
         let res_read = NonZeroU8::from_reader_with_ctx(&mut reader, ()).unwrap();
         assert_eq!(expected, res_read);
-
-        let mut res_write = bitvec![u8, Msb0;];
-        res_read.write(&mut res_write, ()).unwrap();
-        assert_eq!(input.to_vec(), res_write.into_vec());
 
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);

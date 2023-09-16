@@ -6,9 +6,7 @@ use no_std_io::io::{Read, Write};
 
 use crate::ctx::*;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
-
-// TODO: Add DekuWriter
+use crate::{DekuError, DekuReader, DekuWriter};
 
 /// Read `K, V`s into a hashmap until a given predicate returns true
 /// * `capacity` - an optional capacity to pre-allocate the hashmap with
@@ -170,15 +168,17 @@ impl<K: DekuWriter<Ctx>, V: DekuWriter<Ctx>, S, Ctx: Copy> DekuWriter<Ctx> for H
     /// instead of the default RandomState hasher if you don't want the order written to change.
     /// # Examples
     /// ```rust
-    /// # use deku::{ctx::Endian, DekuWrite};
+    /// # use deku::{ctx::Endian, DekuWriter};
+    /// # use deku::writer::Writer;
     /// # use deku::bitvec::{Msb0, bitvec};
     /// # use std::collections::HashMap;
-    /// let mut output = bitvec![u8, Msb0;];
+    /// let mut out_buf = vec![];
+    /// let mut writer = Writer::new(&mut out_buf);
     /// let mut map = HashMap::<u8, u32>::default();
     /// map.insert(100, 0x04030201);
-    /// map.write(&mut output, Endian::Big).unwrap();
+    /// map.to_writer(&mut writer, Endian::Big).unwrap();
     /// let expected: Vec<u8> = vec![100, 4, 3, 2, 1];
-    /// assert_eq!(expected, output.into_vec())
+    /// assert_eq!(expected, out_buf);
     /// ```
     fn to_writer<W: Write>(&self, writer: &mut Writer<W>, inner_ctx: Ctx) -> Result<(), DekuError> {
         for kv in self {
