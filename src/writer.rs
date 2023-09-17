@@ -86,9 +86,9 @@ impl<W: Write> Writer<W> {
             log::trace!("leftover exists");
             // TODO: we could check here and only send the required bits to finish the byte?
             // (instead of sending the entire thing)
-            self.write_bits(&mut BitVec::from_slice(buf))?;
+            self.write_bits(&BitVec::from_slice(buf))?;
         } else {
-            if let Err(_) = self.inner.write_all(buf) {
+            if self.inner.write_all(buf).is_err() {
                 return Err(DekuError::WriteError);
             }
             self.bits_written = buf.len() * 8;
@@ -102,6 +102,8 @@ impl<W: Write> Writer<W> {
         if !self.leftover.is_empty() {
             #[cfg(feature = "logging")]
             log::trace!("finalized: {} bits leftover", self.leftover.len());
+
+            // add bits to be byte aligned so we can write
             self.leftover
                 .extend_from_bitslice(&bitvec![u8, Msb0; 0; 8 - self.leftover.len()]);
             let mut buf = alloc::vec![0x00; self.leftover.len() / 8];
@@ -115,7 +117,7 @@ impl<W: Write> Writer<W> {
                     *slot = byte.load_be();
                 });
 
-            if let Err(_) = self.inner.write_all(&buf) {
+            if self.inner.write_all(&buf).is_err() {
                 return Err(DekuError::WriteError);
             }
             #[cfg(feature = "logging")]
