@@ -81,7 +81,7 @@ mod tests {
         let out_buf = vec![];
         let mut writer = Writer::new(out_buf);
         true.to_writer(&mut writer, BitSize(1)).unwrap();
-        assert_eq!(vec![0b1], writer.leftover.into_vec());
+        assert_eq!(vec![true], writer.rest());
 
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);

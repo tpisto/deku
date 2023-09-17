@@ -47,34 +47,7 @@ fn emit_struct(input: &DekuData) -> Result<TokenStream, syn::Error> {
 
     // Implement `DekuContainerWrite` for types that don't need a context
     if input.ctx.is_none() || (input.ctx.is_some() && input.ctx_default.is_some()) {
-        // TODO: fix to_bits
-        //let to_bits_body = wrap_default_ctx(
-        //    quote! {
-        //        match *self {
-        //            #destructured => {
-        //                let mut __deku_acc: ::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0> = ::#crate_::bitvec::BitVec::new();
-        //                let __deku_output = &mut __deku_acc;
-
-        //                #magic_write
-        //                #(#field_writes)*
-
-        //            Ok(__deku_acc)
-        //            }
-        //        }
-        //    },
-        //    &input.ctx,
-        //    &input.ctx_default,
-        //);
-
         tokens.extend(quote! {
-            //impl #imp core::convert::TryFrom<#ident> for ::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0> #wher {
-            //    type Error = ::#crate_::DekuError;
-
-            //    fn try_from(input: #ident) -> core::result::Result<Self, Self::Error> {
-            //        input.to_bits()
-            //    }
-            //}
-
             impl #imp core::convert::TryFrom<#ident> for Vec<u8> #wher {
                 type Error = ::#crate_::DekuError;
 
@@ -88,14 +61,9 @@ fn emit_struct(input: &DekuData) -> Result<TokenStream, syn::Error> {
                     let mut out_buf = vec![];
                     let mut __deku_writer = ::#crate_::writer::Writer::new(&mut out_buf);
                     ::#crate_::DekuWriter::to_writer(self, &mut __deku_writer, ())?;
-                    __deku_writer.finalize();
+                    __deku_writer.finalize()?;
                     Ok(out_buf)
                 }
-
-                //#[allow(unused_variables)]
-                //fn to_bits(&self) -> core::result::Result<::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0>, ::#crate_::DekuError> {
-                //    #to_bits_body
-                //}
             }
         });
     }
@@ -264,32 +232,7 @@ fn emit_enum(input: &DekuData) -> Result<TokenStream, syn::Error> {
 
     // Implement `DekuContainerWrite` for types that don't need a context
     if input.ctx.is_none() || (input.ctx.is_some() && input.ctx_default.is_some()) {
-        //let to_bits_body = wrap_default_ctx(
-        //    quote! {
-        //        let mut __deku_acc: ::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0> = ::#crate_::bitvec::BitVec::new();
-        //        let __deku_output = &mut __deku_acc;
-
-        //        #magic_write
-
-        //        match self {
-        //            #(#variant_writes),*
-        //        }
-
-        //        Ok(__deku_acc)
-        //    },
-        //    &input.ctx,
-        //    &input.ctx_default,
-        //);
-
         tokens.extend(quote! {
-            //impl #imp core::convert::TryFrom<#ident> for ::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0> #wher {
-            //    type Error = ::#crate_::DekuError;
-
-            //    fn try_from(input: #ident) -> core::result::Result<Self, Self::Error> {
-            //        input.to_bits()
-            //    }
-            //}
-
             impl #imp core::convert::TryFrom<#ident> for Vec<u8> #wher {
                 type Error = ::#crate_::DekuError;
 
@@ -303,14 +246,9 @@ fn emit_enum(input: &DekuData) -> Result<TokenStream, syn::Error> {
                     let mut out_buf = vec![];
                     let mut __deku_writer = ::#crate_::writer::Writer::new(&mut out_buf);
                     ::#crate_::DekuWriter::to_writer(self, &mut __deku_writer, ());
-                    __deku_writer.finalize();
+                    __deku_writer.finalize()?;
                     Ok(out_buf)
                 }
-
-                //#[allow(unused_variables)]
-                //fn to_bits(&self) -> core::result::Result<::#crate_::bitvec::BitVec<u8, ::#crate_::bitvec::Msb0>, ::#crate_::DekuError> {
-                //    #to_bits_body
-                //}
             }
         })
     }

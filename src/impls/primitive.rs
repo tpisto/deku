@@ -929,19 +929,19 @@ mod tests {
     }
 
     #[rstest(input, endian, bit_size, expected, expected_leftover,
-        case::normal_le(0xDDCC_BBAA, Endian::Little, None, vec![0xAA, 0xBB, 0xCC, 0xDD], BitVec::EMPTY),
-        case::normal_be(0xDDCC_BBAA, Endian::Big, None, vec![0xDD, 0xCC, 0xBB, 0xAA], BitVec::EMPTY),
-        case::bit_size_le_smaller(0x03AB, Endian::Little, Some(10), vec![0xAB], bitvec![u8, Msb0; 1, 1]),
-        case::bit_size_be_smaller(0x03AB, Endian::Big, Some(10), vec![0b11_1010_10], bitvec![u8, Msb0; 1, 1]),
+        case::normal_le(0xDDCC_BBAA, Endian::Little, None, vec![0xAA, 0xBB, 0xCC, 0xDD], vec![]),
+        case::normal_be(0xDDCC_BBAA, Endian::Big, None, vec![0xDD, 0xCC, 0xBB, 0xAA], vec![]),
+        case::bit_size_le_smaller(0x03AB, Endian::Little, Some(10), vec![0xAB], vec![true, true]),
+        case::bit_size_be_smaller(0x03AB, Endian::Big, Some(10), vec![0b11_1010_10], vec![true, true]),
         #[should_panic(expected = "InvalidParam(\"bit size 100 is larger then input 32\")")]
-        case::bit_size_le_bigger(0x03AB, Endian::Little, Some(100), vec![0xAB, 0b11_000000], bitvec![u8, Msb0; 1, 1]),
+        case::bit_size_le_bigger(0x03AB, Endian::Little, Some(100), vec![0xAB, 0b11_000000], vec![true, true]),
     )]
     fn test_bit_writer(
         input: u32,
         endian: Endian,
         bit_size: Option<usize>,
         expected: Vec<u8>,
-        expected_leftover: BitVec<u8, Msb0>,
+        expected_leftover: Vec<bool>,
     ) {
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);
@@ -951,7 +951,7 @@ mod tests {
                 .unwrap(),
             None => input.to_writer(&mut writer, endian).unwrap(),
         };
-        assert_eq!(expected_leftover, writer.leftover);
+        assert_eq!(expected_leftover, writer.rest());
         assert_eq!(expected, out_buf);
     }
 
