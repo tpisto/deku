@@ -76,8 +76,8 @@ mod tests {
 
     #[test]
     fn test_writer() {
-        let out_buf = vec![];
-        let mut writer = Writer::new(out_buf);
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
         true.to_writer(&mut writer, BitSize(1)).unwrap();
         assert_eq!(vec![true], writer.rest());
 

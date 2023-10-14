@@ -14,17 +14,17 @@ const fn bits_of<T>() -> usize {
 }
 
 /// Container to use with `from_reader`
-pub struct Writer<W: Write> {
-    pub(crate) inner: W,
+pub struct Writer<'a, W: Write> {
+    pub(crate) inner: &'a mut W,
     leftover: BitVec<u8, Msb0>,
     /// Total bits written
     pub bits_written: usize,
 }
 
-impl<W: Write> Writer<W> {
+impl<'a, W: Write> Writer<'a, W> {
     /// Create a new `Writer`
     #[inline]
-    pub fn new(inner: W) -> Self {
+    pub fn new(inner: &'a mut W) -> Self {
         Self {
             inner,
             leftover: BitVec::new(),
