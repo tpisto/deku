@@ -245,7 +245,7 @@ fn emit_enum(input: &DekuData) -> Result<TokenStream, syn::Error> {
                 fn to_bytes(&self) -> core::result::Result<Vec<u8>, ::#crate_::DekuError> {
                     let mut out_buf = vec![];
                     let mut __deku_writer = ::#crate_::writer::Writer::new(&mut out_buf);
-                    ::#crate_::DekuWriter::to_writer(self, &mut __deku_writer, ());
+                    ::#crate_::DekuWriter::to_writer(self, &mut __deku_writer, ())?;
                     __deku_writer.finalize()?;
                     Ok(out_buf)
                 }
@@ -310,7 +310,7 @@ fn emit_magic_write(input: &DekuData) -> TokenStream {
     let crate_ = super::get_crate_name();
     if let Some(magic) = &input.magic {
         quote! {
-            ::#crate_::DekuWriter::to_writer(#magic, __deku_writer, ());
+            ::#crate_::DekuWriter::to_writer(#magic, __deku_writer, ())?;
         }
     } else {
         quote! {}

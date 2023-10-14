@@ -270,44 +270,9 @@ mod tests {
         case::normal(fxhashmap!{0x11u8 => 0xAABBu16, 0x23u8 => 0xCCDDu16}, Endian::Little, vec![0x11, 0xBB, 0xAA, 0x23, 0xDD, 0xCC]),
     )]
     fn test_hashmap_write(input: FxHashMap<u8, u16>, endian: Endian, expected: Vec<u8>) {
-        //let mut res_write = bitvec![u8, Msb0;];
-        //input.write(&mut res_write, endian).unwrap();
-        //assert_eq!(expected, res_write.into_vec());
-    }
-
-    // Note: These tests also exist in boxed.rs
-    #[rstest(input, endian, limit, expected, expected_rest_bits, expected_rest_bytes, expected_write,
-        case::normal_le([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Little, 2.into(), fxhashmap!{0xBBAA => 0, 0xDDCC => 0}, bits![u8, Msb0;], &[], vec![0xCC, 0xDD, 0, 0xAA, 0xBB, 0]),
-        case::normal_be([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Big, 2.into(), fxhashmap!{0xAABB => 0, 0xCCDD => 0}, bits![u8, Msb0;], &[], vec![0xCC, 0xDD, 0, 0xAA, 0xBB, 0]),
-        case::predicate_le([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Little, (|kv: &(u16, u8)| kv.0 == 0xBBAA && kv.1 == 0).into(), fxhashmap!{0xBBAA => 0}, bits![u8, Msb0;], &[0xcc, 0xdd, 0], vec![0xAA, 0xBB, 0]),
-        case::predicate_be([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Big, (|kv: &(u16, u8)| kv.0 == 0xAABB && kv.1 == 0).into(), fxhashmap!{0xAABB => 0}, bits![u8, Msb0;], &[0xcc, 0xdd, 0], vec![0xAA, 0xBB, 0]),
-        case::bytes_le([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Little, BitSize(24).into(), fxhashmap!{0xBBAA => 0}, bits![u8, Msb0;], &[0xcc, 0xdd, 0], vec![0xAA, 0xBB, 0]),
-        case::bytes_be([0xAA, 0xBB, 0, 0xCC, 0xDD, 0].as_ref(), Endian::Big, BitSize(24).into(), fxhashmap!{0xAABB => 0}, bits![u8, Msb0;], &[0xcc, 0xdd, 0], vec![0xAA, 0xBB, 0]),
-    )]
-    fn test_hashmap_read_write<Predicate: FnMut(&(u16, u8)) -> bool + Copy>(
-        input: &[u8],
-        endian: Endian,
-        limit: Limit<(u16, u8), Predicate>,
-        expected: FxHashMap<u16, u8>,
-        expected_rest_bits: &BitSlice<u8, Msb0>,
-        expected_rest_bytes: &[u8],
-        expected_write: Vec<u8>,
-    ) {
-        let mut cursor = Cursor::new(input);
-        let mut reader = Reader::new(&mut cursor);
-        let res_read =
-            FxHashMap::<u16, u8>::from_reader_with_ctx(&mut reader, (limit, endian)).unwrap();
-        assert_eq!(expected, res_read);
-        assert_eq!(
-            reader.rest(),
-            expected_rest_bits.iter().by_vals().collect::<Vec<bool>>()
-        );
-        let mut buf = vec![];
-        cursor.read_to_end(&mut buf).unwrap();
-        assert_eq!(expected_rest_bytes, buf);
-
-        //let mut res_write = bitvec![u8, Msb0;];
-        //res_read.write(&mut res_write, endian).unwrap();
-        //assert_eq!(expected_write, res_write.into_vec());
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        input.to_writer(&mut writer, endian).unwrap();
+        assert_eq!(expected, out_buf);
     }
 }

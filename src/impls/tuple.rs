@@ -97,8 +97,9 @@ mod tests {
     where
         T: DekuWriter,
     {
-        //let mut res_write = bitvec![u8, Msb0;];
-        //input.write(&mut res_write, ()).unwrap();
-        //assert_eq!(expected, res_write.into_vec());
+        let mut out_buf = vec![];
+        let mut writer = Writer::new(&mut out_buf);
+        input.to_writer(&mut writer, ()).unwrap();
+        assert_eq!(expected, out_buf);
     }
 }
