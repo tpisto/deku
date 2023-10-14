@@ -1,12 +1,10 @@
 use no_std_io::io::{Read, Write};
 use std::ffi::CString;
 
-use bitvec::prelude::*;
-
 use crate::reader::Reader;
 use crate::writer::Writer;
 use crate::{ctx::*, DekuReader};
-use crate::{DekuError, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuWriter};
 
 impl<Ctx: Copy> DekuWriter<Ctx> for CString
 where

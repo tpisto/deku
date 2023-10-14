@@ -3,8 +3,6 @@ use no_std_io::io::{Read, Write};
 use alloc::boxed::Box;
 use alloc::vec::Vec;
 
-use bitvec::prelude::*;
-
 use crate::ctx::Limit;
 use crate::reader::Reader;
 use crate::writer::Writer;
@@ -63,6 +61,7 @@ mod tests {
     use crate::ctx::*;
     use crate::native_endian;
     use crate::reader::Reader;
+    use bitvec::prelude::*;
 
     #[rstest(input, expected,
         case(
@@ -97,7 +96,7 @@ mod tests {
         bit_size: Option<usize>,
         limit: Limit<u16, Predicate>,
         expected: Box<[u16]>,
-        expected_rest_bits: &BitSlice<u8, Msb0>,
+        expected_rest_bits: &bitvec::slice::BitSlice<u8, bitvec::prelude::Msb0>,
         expected_rest_bytes: &[u8],
         expected_write: Vec<u8>,
     ) {

@@ -4,7 +4,7 @@ pub use deku_derive::*;
 
 use crate::reader::Reader;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 use core::mem::MaybeUninit;
 use no_std_io::io::{Read, Write};
 

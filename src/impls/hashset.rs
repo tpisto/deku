@@ -184,6 +184,7 @@ mod tests {
     use rustc_hash::FxHashSet;
 
     use crate::reader::Reader;
+    use bitvec::prelude::*;
 
     use super::*;
 

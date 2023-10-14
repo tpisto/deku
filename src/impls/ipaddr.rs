@@ -2,11 +2,9 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use no_std_io::io::{Read, Write};
 
-use bitvec::prelude::*;
-
 use crate::reader::Reader;
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 impl<'a, Ctx> DekuReader<'a, Ctx> for Ipv4Addr
 where

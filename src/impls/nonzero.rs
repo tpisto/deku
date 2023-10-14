@@ -3,8 +3,6 @@ use alloc::format;
 use core::num::*;
 use no_std_io::io::{Read, Write};
 
-use bitvec::prelude::*;
-
 use crate::ctx::*;
 use crate::reader::Reader;
 use crate::writer::Writer;
@@ -70,6 +68,7 @@ mod tests {
     use crate::reader::Reader;
 
     use super::*;
+    use bitvec::prelude::*;
 
     #[rstest(input, expected,
         case(&hex!("FF"), NonZeroU8::new(0xFF).unwrap()),

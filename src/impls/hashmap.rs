@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::hash::{BuildHasher, Hash};
 
-use bitvec::prelude::*;
 use no_std_io::io::{Read, Write};
 
 use crate::ctx::*;
@@ -197,6 +196,7 @@ mod tests {
     use crate::reader::Reader;
 
     use super::*;
+    use bitvec::prelude::*;
 
     // Macro to create a deterministic HashMap for tests
     // This is needed for tests since the default HashMap Hasher

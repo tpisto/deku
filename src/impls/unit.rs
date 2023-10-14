@@ -1,22 +1,12 @@
-use bitvec::prelude::*;
 use no_std_io::io::{Read, Write};
 
-use crate::{
-    reader::Reader, writer::Writer, DekuError, DekuRead, DekuReader, DekuWrite, DekuWriter,
-};
+use crate::{reader::Reader, writer::Writer, DekuError, DekuReader, DekuWriter};
 
 impl<Ctx: Copy> DekuReader<'_, Ctx> for () {
     fn from_reader_with_ctx<R: Read>(
         _reader: &mut Reader<R>,
         _inner_ctx: Ctx,
     ) -> Result<Self, DekuError> {
-        Ok(())
-    }
-}
-
-impl<Ctx: Copy> DekuWrite<Ctx> for () {
-    /// NOP on write
-    fn write(&self, _output: &mut BitVec<u8, Msb0>, _inner_ctx: Ctx) -> Result<(), DekuError> {
         Ok(())
     }
 }
@@ -49,10 +39,6 @@ mod tests {
         let mut reader = Reader::new(&mut cursor);
         let res_read = <()>::from_reader_with_ctx(&mut reader, ()).unwrap();
         assert_eq!((), res_read);
-
-        let mut res_write = bitvec![u8, Msb0;];
-        res_read.write(&mut res_write, ()).unwrap();
-        assert_eq!(0, res_write.len());
 
         let mut out_buf = vec![];
         let mut writer = Writer::new(&mut out_buf);

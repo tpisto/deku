@@ -1,3 +1,5 @@
+//! Writer for writer functions
+
 use bitvec::bitvec;
 use bitvec::{field::BitField, prelude::*};
 use no_std_io::io::Write;
@@ -15,10 +17,12 @@ const fn bits_of<T>() -> usize {
 pub struct Writer<W: Write> {
     pub(crate) inner: W,
     leftover: BitVec<u8, Msb0>,
+    /// Total bits written
     pub bits_written: usize,
 }
 
 impl<W: Write> Writer<W> {
+    /// Create a new `Writer`
     #[inline]
     pub fn new(inner: W) -> Self {
         Self {
@@ -28,11 +32,13 @@ impl<W: Write> Writer<W> {
         }
     }
 
+    /// Return the unused bits
     #[inline]
     pub fn rest(&mut self) -> alloc::vec::Vec<bool> {
         self.leftover.iter().by_vals().collect()
     }
 
+    /// Write all bits to `Writer` buffer if bits can fit into a byte buffer
     #[inline]
     pub fn write_bits(&mut self, bits: &BitSlice<u8, Msb0>) -> Result<(), DekuError> {
         #[cfg(feature = "logging")]
@@ -68,7 +74,7 @@ impl<W: Write> Writer<W> {
         // TODO: with_capacity?
         self.bits_written = buf.len() * 8;
         self.leftover = bits.to_bitvec();
-        if let Err(_) = self.inner.write_all(&buf) {
+        if self.inner.write_all(&buf).is_err() {
             return Err(DekuError::WriteError);
         }
         #[cfg(feature = "logging")]
@@ -77,6 +83,7 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    /// Write `buf` into `Writer`
     #[inline]
     pub fn write_bytes(&mut self, buf: &[u8]) -> Result<(), DekuError> {
         #[cfg(feature = "logging")]
@@ -97,6 +104,8 @@ impl<W: Write> Writer<W> {
         Ok(())
     }
 
+    /// Write all remaining bits into `Writer`, adding empty bits to the end so that we can write
+    /// into a byte buffer
     #[inline]
     pub fn finalize(&mut self) -> Result<(), DekuError> {
         if !self.leftover.is_empty() {

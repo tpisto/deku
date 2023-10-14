@@ -3,8 +3,6 @@ use no_std_io::io::{Read, Write};
 #[cfg(feature = "alloc")]
 use alloc::format;
 
-use bitvec::prelude::*;
-
 use crate::reader::Reader;
 use crate::writer::Writer;
 use crate::{DekuError, DekuReader, DekuWriter};

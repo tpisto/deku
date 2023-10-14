@@ -1,11 +1,10 @@
 //! Implementations of DekuRead and DekuWrite for tuples of length 1 to 11
 
-use crate::reader::Reader;
 use crate::writer::Writer;
-use bitvec::prelude::*;
+
 use no_std_io::io::{Read, Write};
 
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 // Trait to help us build intermediate tuples while DekuRead'ing each element
 // from the tuple

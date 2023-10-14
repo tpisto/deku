@@ -44,6 +44,7 @@ pub enum DekuError {
     Assertion(String),
     /// Could not resolve `id` for variant
     IdVariantNotFound,
+    /// IO error while writing
     WriteError,
 }
 

@@ -10,7 +10,7 @@ use no_std_io::io::{Read, Write};
 use crate::ctx::*;
 use crate::reader::{Reader, ReaderRet};
 use crate::writer::Writer;
-use crate::{DekuError, DekuReader, DekuWrite, DekuWriter};
+use crate::{DekuError, DekuReader, DekuWriter};
 
 /// "Read" trait: read bits and construct type
 trait DekuRead<'a, Ctx = ()> {
@@ -30,6 +30,19 @@ trait DekuRead<'a, Ctx = ()> {
     ) -> Result<(usize, Self), DekuError>
     where
         Self: Sized;
+}
+
+/// "Writer" trait: write from type to bits
+trait DekuWrite<Ctx = ()> {
+    /// Write type to bits
+    /// * **output** - Sink to store resulting bits
+    /// * **ctx** - A context required by context-sensitive reading. A unit type `()` means no context
+    /// needed.
+    fn write(
+        &self,
+        output: &mut crate::bitvec::BitVec<u8, crate::bitvec::Msb0>,
+        ctx: Ctx,
+    ) -> Result<(), DekuError>;
 }
 
 /// Implements DekuWrite for references of types that implement DekuWrite
