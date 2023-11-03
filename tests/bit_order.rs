@@ -229,8 +229,25 @@ pub struct MoreFirst {
 fn test_bit_order_more_first() {
     let data = vec![0x40, 0x40];
     let more_first = MoreFirst::try_from(data.as_ref()).unwrap();
-    //                           bits: 13            3
     assert_eq!(more_first, MoreFirst { offset: 0x40, t: 2 });
+
+    let bytes = more_first.to_bytes().unwrap();
+    assert_eq_hex!(bytes, data);
+}
+
+#[derive(Debug, DekuRead, DekuWrite, PartialEq)]
+pub struct LsbField {
+    #[deku(bit_order = "lsb", bits = "13")]
+    offset: u16,
+    #[deku(bit_order = "lsb", bits = "3")]
+    t: u8,
+}
+
+#[test]
+fn test_bit_order_lsb_field() {
+    let data = vec![0x40, 0x40];
+    let more_first = LsbField::try_from(data.as_ref()).unwrap();
+    assert_eq!(more_first, LsbField { offset: 0x40, t: 2 });
 
     let bytes = more_first.to_bytes().unwrap();
     assert_eq_hex!(bytes, data);
@@ -309,7 +326,6 @@ pub struct MoreFirstBe {
 
 #[test]
 fn test_bit_order_more_first_be() {
-    env_logger::init();
     let data = vec![0x40, 0x40];
     let more_first = MoreFirstBe::try_from(data.as_ref()).unwrap();
     assert_eq!(

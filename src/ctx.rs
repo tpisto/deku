@@ -4,12 +4,12 @@
 use core::marker::PhantomData;
 use core::str::FromStr;
 
-/// An Bit Order
+/// Bit numbering
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Order {
-    /// Big endian
+    /// Most significant bit
     Msb0,
-    /// Little endian
+    /// least significant bit
     Lsb0,
 }
 
