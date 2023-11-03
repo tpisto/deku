@@ -4,9 +4,12 @@
 use core::marker::PhantomData;
 use core::str::FromStr;
 
+/// An Bit Order
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Order {
+    /// Big endian
     Msb0,
+    /// Little endian
     Lsb0,
 }
 
