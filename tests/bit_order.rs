@@ -297,3 +297,29 @@ fn test_bit_order_custom_reader_writer() {
     let bytes = more_first.to_bytes().unwrap();
     assert_eq_hex!(bytes, data);
 }
+
+#[derive(Debug, DekuRead, DekuWrite, PartialEq)]
+#[deku(endian = "big", bit_order = "lsb")]
+pub struct MoreFirstBe {
+    #[deku(bits = "13")]
+    offset: u16,
+    #[deku(bits = "3")]
+    t: u8,
+}
+
+#[test]
+fn test_bit_order_more_first_be() {
+    env_logger::init();
+    let data = vec![0x40, 0x40];
+    let more_first = MoreFirstBe::try_from(data.as_ref()).unwrap();
+    assert_eq!(
+        more_first,
+        MoreFirstBe {
+            offset: 0x4000,
+            t: 2
+        }
+    );
+
+    let bytes = more_first.to_bytes().unwrap();
+    assert_eq_hex!(bytes, data);
+}

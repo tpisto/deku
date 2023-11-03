@@ -673,47 +673,35 @@ macro_rules! ImplDekuWrite {
                     )));
                 }
 
-                if (endian == Endian::Little) && (order == Order::Lsb0) {
-                    let mut remaining_bits = bit_size;
-                    for chunk in input_bits.chunks(8) {
-                        if chunk.len() > remaining_bits {
-                            writer.write_bits_order(
-                                &chunk[chunk.len() - remaining_bits..],
-                                Order::Lsb0,
-                            )?;
-                            break;
-                        } else {
-                            writer.write_bits_order(&chunk, Order::Lsb0)?;
+                match (endian, order) {
+                    (Endian::Little, Order::Lsb0)
+                    | (Endian::Little, Order::Msb0)
+                    | (Endian::Big, Order::Lsb0) => {
+                        let mut remaining_bits = bit_size;
+                        for chunk in input_bits.chunks(8) {
+                            if chunk.len() > remaining_bits {
+                                writer.write_bits_order(
+                                    &chunk[chunk.len() - remaining_bits..],
+                                    order,
+                                )?;
+                                break;
+                            } else {
+                                writer.write_bits_order(&chunk, order)?;
+                            }
+                            remaining_bits -= chunk.len();
                         }
-                        remaining_bits -= chunk.len();
                     }
-                    return Ok(());
+                    (Endian::Big, Order::Msb0) => {
+                        // big endian
+                        // Example read 10 bits u32 [0xAB, 0b11_000000]
+                        // => [00000000, 00000000, 00000010, 10101111]
+                        writer.write_bits_order(
+                            &input_bits[input_bits.len() - bit_size..],
+                            Order::Msb0,
+                        )?;
+                    }
                 }
 
-                if (endian == Endian::Little) && (order == Order::Msb0) {
-                    // Example read 10 bits u32 [0xAB, 0b11_000000]
-                    // => [10101011, 00000011, 00000000, 00000000]
-                    let mut remaining_bits = bit_size;
-                    for chunk in input_bits.chunks(8) {
-                        if chunk.len() > remaining_bits {
-                            // TODO: allow write_bytes?
-                            writer.write_bits_order(
-                                &chunk[chunk.len() - remaining_bits..],
-                                Order::Msb0,
-                            )?;
-                            break;
-                        } else {
-                            writer.write_bits_order(&chunk, Order::Msb0)?;
-                        }
-                        remaining_bits -= chunk.len();
-                    }
-                    return Ok(());
-                }
-
-                // big endian
-                // Example read 10 bits u32 [0xAB, 0b11_000000]
-                // => [00000000, 00000000, 00000010, 10101111]
-                writer.write_bits_order(&input_bits[input_bits.len() - bit_size..], Order::Msb0)?;
                 Ok(())
             }
         }

@@ -135,7 +135,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 return Err(DekuError::WriteError);
             }
             #[cfg(feature = "logging")]
-            log::trace!("wrote {} bits : {:02x?}", buf.len() * 8, &buf);
+            log::trace!("wrote {} bits : 0x{:02x?}", buf.len() * 8, &buf);
         } else {
             // This is more complicated, as we need to skip the first bytes until we are "byte aligned"
             // TODO: then reverse the buf before writing in the case that bits.len() > one byte buf ?
@@ -167,7 +167,7 @@ impl<'a, W: Write> Writer<'a, W> {
                 return Err(DekuError::WriteError);
             }
             #[cfg(feature = "logging")]
-            log::trace!("wrote {} bits : {:02x?}", buf.len() * 8, &buf);
+            log::trace!("wrote {} bits : 0x{:02x?}", buf.len() * 8, &buf);
         }
 
         #[cfg(feature = "logging")]
