@@ -198,7 +198,7 @@ pub struct BigEndian {
 let data = vec![0x40, 0x40];
 let big_endian = BigEndian::try_from(data.as_ref()).unwrap();
 assert_eq!(
-    more_first,
+    big_endian,
     BigEndian {
         offset: 0x4000,
         t: 2

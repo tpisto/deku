@@ -182,6 +182,9 @@ impl<'a, R: Read> Reader<'a, R> {
                 // remove bytes until we get to the last byte, of which
                 // we need to care abount bit-order
                 let mut front_bits = None;
+
+                // Allow bits_left -= bits_left - (bits_left % 8), as this is correct
+                #[allow(clippy::misrefactored_assign_op)]
                 if bits_left > 8 {
                     let (used, more) = rest.split_at(bits_left - (bits_left % 8));
                     bits_left -= bits_left - (bits_left % 8);
@@ -192,7 +195,7 @@ impl<'a, R: Read> Reader<'a, R> {
                 match order {
                     Order::Lsb0 => {
                         let (rest, used) = rest.split_at(rest.len() - bits_left);
-                        ret.extend_from_bitslice(&used);
+                        ret.extend_from_bitslice(used);
                         ret.extend_from_bitslice(&self.leftover);
                         if let Some(front_bits) = front_bits {
                             ret.extend_from_bitslice(front_bits);

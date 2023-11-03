@@ -1,7 +1,7 @@
 use assert_hex::assert_eq_hex;
 use deku::ctx::{BitSize, Order};
 use deku::prelude::*;
-use hexlit::hex;
+
 use std::convert::TryFrom;
 
 #[derive(Debug, DekuRead, DekuWrite, PartialEq)]

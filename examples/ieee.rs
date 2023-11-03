@@ -1,6 +1,6 @@
 use deku::ctx::Order;
 use deku::prelude::*;
-use hexlit::hex;
+
 use std::convert::TryFrom;
 
 #[derive(Debug, DekuRead, DekuWrite, PartialEq)]

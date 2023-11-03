@@ -81,36 +81,34 @@ impl<'a, W: Write> Writer<'a, W> {
 
         let mut bits = if self.leftover.0.is_empty() {
             bits
+        } else if self.leftover.1 == Order::Msb0 {
+            #[cfg(feature = "logging")]
+            log::trace!(
+                "pre-pending {} bits : {}",
+                self.leftover.0.len(),
+                self.leftover.0
+            );
+
+            self.leftover.0.extend_from_bitslice(bits);
+
+            #[cfg(feature = "logging")]
+            log::trace!("now {} bits : {}", self.leftover.0.len(), self.leftover.0);
+            &mut self.leftover.0
         } else {
-            if self.leftover.1 == Order::Msb0 {
-                #[cfg(feature = "logging")]
-                log::trace!(
-                    "pre-pending {} bits : {}",
-                    self.leftover.0.len(),
-                    self.leftover.0
-                );
+            #[cfg(feature = "logging")]
+            log::trace!(
+                "post-pending {} bits : {}",
+                self.leftover.0.len(),
+                self.leftover.0
+            );
 
-                self.leftover.0.extend_from_bitslice(bits);
+            let tmp = self.leftover.0.clone();
+            self.leftover.0 = bits.to_owned();
+            self.leftover.0.extend_from_bitslice(&tmp);
 
-                #[cfg(feature = "logging")]
-                log::trace!("now {} bits : {}", self.leftover.0.len(), self.leftover.0);
-                &mut self.leftover.0
-            } else {
-                #[cfg(feature = "logging")]
-                log::trace!(
-                    "post-pending {} bits : {}",
-                    self.leftover.0.len(),
-                    self.leftover.0
-                );
-
-                let tmp = self.leftover.0.clone();
-                self.leftover.0 = bits.to_owned();
-                self.leftover.0.extend_from_bitslice(&tmp);
-
-                #[cfg(feature = "logging")]
-                log::trace!("now {} bits : {}", self.leftover.0.len(), self.leftover.0);
-                &mut self.leftover.0
-            }
+            #[cfg(feature = "logging")]
+            log::trace!("now {} bits : {}", self.leftover.0.len(), self.leftover.0);
+            &mut self.leftover.0
         };
 
         if order == Order::Msb0 {
