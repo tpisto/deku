@@ -10,6 +10,9 @@ use log;
 use crate::ctx::Order;
 use crate::DekuError;
 
+#[cfg(feature = "alloc")]
+use alloc::borrow::ToOwned;
+
 const fn bits_of<T>() -> usize {
     core::mem::size_of::<T>().saturating_mul(<u8>::BITS as usize)
 }

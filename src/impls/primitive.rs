@@ -2,6 +2,8 @@
 use alloc::format;
 #[cfg(feature = "alloc")]
 use alloc::string::ToString;
+#[cfg(feature = "alloc")]
+use alloc::vec;
 use core::convert::TryInto;
 
 use bitvec::prelude::*;
